@@ -591,7 +591,7 @@ public class Device {
                 String fingerprint = database.select(id);
 
                 // asserts if the returned data is not an empty value
-                if (fingerprint.equals("")) {
+                if (!fingerprint.equals("")) {
                     compareToDb(fingerprint);
                 } else {
                     UI.ifInvalidID_label.setVisible(true);
