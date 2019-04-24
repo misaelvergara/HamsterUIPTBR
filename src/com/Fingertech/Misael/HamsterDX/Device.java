@@ -1,9 +1,21 @@
-/************************************************************
- * onEventCloseWindow = terminate all pending connections   *
+/**********************************************************************
+ * PROJECT IDENTITY ==========> .......................................
+ * . (a) INTERACT WITH FINGERPRINT SCANNERS HAMSTER DX and HAMSTER III.
+ * . (b) READ FINGERPRINT DATA STORED IN A DATABASE ...................
+ * . (c) COMPARE FINGERPRINT DATA .....................................
+ * . (d) SCAN FINGERPRINTS ............................................
+ * . (e) STORE FINGERPRINT DATA IN A DATABASE .........................
+ * . (f) CLIENT-USER INTERACTION THROUGH USER INTERFACE ...............
+ * ********************************************************************
  *
+ * DRIVER DEPENDENCY ==========> ......................................
+ * . (a), (c), (d) [NBioBSPJNI.jar] ...................................
+ * . (b), (e) [Java ActionEvent], [Java SQL], [Java ActionListener] ...
+ * . (f) [Java Swing] .................................................
+ * ********************************************************************
  *
- *
- * **********************************************************
+ * ..... PROBLEM-SOLUTION APPROACH AS FOLLOWS ==========> [...] .......
+ * ********************************************************************
  */
 
 package com.Fingertech.Misael.HamsterDX;
@@ -13,11 +25,6 @@ import com.nitgen.SDK.BSP.NBioBSPJNI;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.*;
-
-import com.mysql.jdbc.Driver;
-
-import java.util.concurrent.TimeUnit;
-
 import java.sql.*;
 
 public class Device {
@@ -28,11 +35,11 @@ public class Device {
      */
     //number of messages counter
     private static int outCounter = 0;
-    //integer which represents the currently opened device in an array list
+    //integer which represents the currently opened device as an array index
     private int deviceIdInt;
 
     //instantiates the user interface class
-    DeviceUI UI = new DeviceUI();
+    private DeviceUI UI = new DeviceUI();
 
     //logging method
     private void out(String msg) {
@@ -72,10 +79,6 @@ public class Device {
         private static String firRecord;
         private static String remoteFirFromDB;
         private static String lastPromptedId = "0";
-
-        private static void init() {
-            deviceConnected = false;
-        }
     }
 
     //database access class
@@ -90,7 +93,7 @@ public class Device {
                 pw + "&useTimezone=true&serverTimezone=UTC";
 
         //accesses database and returns whether the connection was successful or not
-        public boolean access() {
+        private boolean access() {
             try {
                 //verifies if the driver class is present
                 Class.forName("com.mysql.cj.jdbc.Driver");
@@ -113,7 +116,7 @@ public class Device {
         }
 
         //leaves connection
-        public void leave() {
+        private void leave() {
             try {
                 connection.close();
                 out(Msg.DB.CLOSED);
@@ -123,11 +126,11 @@ public class Device {
         }
 
         //returns user fingerprint data from the database
-        public String select(String id) {
+        private String select(String id) {
             try {
 
                 //checks if the currently prompted id is equal to the last prompted id
-                if (Self.lastPromptedId == id) {
+                if (Self.lastPromptedId.equals(id)) {
                     return Self.remoteFirFromDB;
 
                 } else {
@@ -158,7 +161,7 @@ public class Device {
         /* Returns the selected database table number of rows.
            This number represents the id of the last registered user.
         */
-        public int returnID() {
+        private int returnID() {
             try {
                 String query = "SELECT count(*) FROM user_data;";
                 Statement newStatement = connection.createStatement();
@@ -176,7 +179,7 @@ public class Device {
         /* Utility: stores fingerprint data in the Mysql database
            Parameter: fingerprint database
          */
-        public void save(String fir) {
+        private void save(String fir) {
             try {
                 String query = "INSERT INTO user_data (fir_data) VALUES (?);";
                 PreparedStatement newStatement = connection.prepareStatement(query);
@@ -192,7 +195,7 @@ public class Device {
         }
     }
 
-    Device.Database database = new Device.Database();
+    private Device.Database database = new Device.Database();
 
     /*.............................................................
       ..... CLASS METHODS .........................................
@@ -237,7 +240,7 @@ public class Device {
 
     }
 
-    //connects to a selected device
+    //connects to a SELECTED device
     private boolean connectTo() {
         //number representing the list item selected
         deviceIdInt = UI.device_list.getSelectedIndex();
@@ -263,9 +266,8 @@ public class Device {
         bsp.CloseDevice();
     }
 
-    /*  . realiza a captura da uma digital
-        . abre a interface do leitor
-        . relaciona os dados coletados à uma string
+    /*  . captures a fingerprint
+        . refers to the collected fingerprint data to a string
      */
     private boolean doCapture() {
         /*  Erases data of past captured fingerprints.
@@ -313,7 +315,7 @@ public class Device {
         return true;
     }
 
-    // . captura uma nova digital para comparação à previamente capturada
+    // . captures a new fingerprint and compares it against the previously captured fingerprint
     private void doMatch() {
         out(Msg.Verify.INIT);
 
@@ -379,8 +381,8 @@ public class Device {
         }
     }
 
-    /*  . parâmetro: dados biométricos de uma digital do banco
-        . captura uma nova digital e a compara ao parâmetro recebido
+    /*  . parameter: fingerprint data from a database
+        . captures a new fingerprint and compares it against the parsed parameter
     */
     private void compareToDb(String fingerprint) {
         if (sampleInfo != null) {
@@ -403,6 +405,7 @@ public class Device {
         dbReturnedTXTFIR.TextFIR = fingerprint;
         inputFIR.SetTextFIR(dbReturnedTXTFIR);
 
+        //tries capture method and catches resulted exception
         try {
             bsp.Capture(captureHandle);
         } catch (Exception e) {
@@ -430,18 +433,15 @@ public class Device {
         }
     }
 
+    //adds devices to the device list
     private void addToDeviceList(int i) {
         UI.device_list.addItem(deviceEnumInfo.DeviceInfo[i].Name +
                 "-" + deviceEnumInfo.DeviceInfo[i].Instance);
     }
 
-    private void initialProcedures() {
-        /*  Greets user and asks them to plug in their device.
-         */
-        out(Msg.GREET);
 
-    }
-
+    /*  checks firRecord availability in order to enable a button
+     */
     private boolean canSaveFirToDB() {
         if (Self.firRecord != null) {
             UI.saveString_button.setEnabled(true);
@@ -452,7 +452,8 @@ public class Device {
         }
     }
 
-    private void initializeButtons() {
+    //  assembles buttons upon call
+    private void assemble() {
         UI.match_button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -463,9 +464,13 @@ public class Device {
         UI.capture_button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                //executes capture method and checks if it was successful
                 if (doCapture()) {
+
+                    //enable match button
                     UI.match_button.setEnabled(true);
 
+                    //enables store in database button if the client is connected to a database
                     if (Self.dbConnected) {
                         UI.saveString_button.setEnabled(true);
                     }
@@ -477,34 +482,53 @@ public class Device {
             @Override
             public void actionPerformed(ActionEvent e) {
 
+                // asserts if the device look up button is checked to open a device
                 if (!Self.behaveOpenButton) {
                     out(Msg.LOOKING_UP_DEVICES);
+                    // closes device even if no devices are connected
                     closeDevice();
-                    UI.buttonsEnabled(false);
+                    // disables capture and match buttons
+                    UI.captureAndMatchEnabled(false);
+                    UI.enableDBCompare(false);
+                    UI.enableDBButtons(false);
+
+                    // hides showSavedID label
+                    UI.showSavedId_label.setVisible(false);
+
+                    // looks up for connected devices and returns as a boolean if any was found
                     if (doLookUpConnected()) {
-                        //has devices
                         UI.lookUp_button.setText(Msg.Button.OPEN);
-                        UI.buttonsEnabled(false);
-                        UI.enableDBCompare(false);
-                        UI.enableDBButtons(false);
                         Self.behaveOpenButton = true;
                     }
-                } else {
+                } else { //<= executes code if the look up button is set to open a device
+                    
+                    // attempts to connect to a selected device and returns boolean as result
                     if (connectTo()) {
                         out(Msg.DEVICE_OPENED);
                         UI.lookUp_button.setText(Msg.Button.FIND);
+                        
+                        //empties device list in order to prepare it for further detections
                         UI.device_list.removeAllItems();
+                        
+                        //enables capture and match buttons
+                        UI.captureAndMatchEnabled(true);
 
-                        UI.buttonsEnabled(true);
                         UI.accessDB_button.setEnabled(true);
                         UI.accessDB_button.setText("Conectar ao banco..");
+
                         UI.match_button.setEnabled(false);
 
+                        /* now connection was established to the attached fingerprint scanner,
+                           the find device button is set to operate by its default purpose, which
+                           is to find attached devices
+                         */
                         Self.behaveOpenButton = false;
-                    } else {
+                    } else { //<= executes if connection wasn't established
                         out(Msg.DEVICE_OPENING_FAILED);
+
                         UI.lookUp_button.setText(Msg.Button.RETRY);
                         UI.device_list.removeAllItems();
+
                         Self.behaveOpenButton = false;
                     }
                 }
@@ -517,16 +541,24 @@ public class Device {
             @Override
             public void actionPerformed(ActionEvent e) {
 
+                // attempts connection to a user defined database, returns boolean
                 if (database.access()) {
+
+                    //enable functionality for database buttons
                     UI.accessDB_button.setText("CONECTADO");
                     UI.accessDB_button.setEnabled(false);
                     UI.enableDBCompare(true);
 
+                    /* checks if any fingerprint was captured and enables store in database
+                        button
+                     */
                     if (canSaveFirToDB()) {
                         System.out.println("/:-)\\ CAN SAVE TO DB");
                     }
+
+                    //asserts connectivity to a established database
                     Self.dbConnected = true;
-                } else {
+                } else {//<= if connectivity fails
                     out(Msg.DB.NO);
                 }
 
@@ -536,24 +568,44 @@ public class Device {
         UI.saveString_button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                // stores fingerprint data in the database
                 database.save(Self.firRecord);
+
+                // returns the id of the stored database for further access
                 int id = database.returnID();
-                out("Número do ID para o usuário: " + Integer.toString(id));
+                String displaySavedID = "ID PARA CADASTRO: " + id;
+
+
+                UI.showSavedId_label.setVisible(true);
+                UI.showSavedId_label.setText(displaySavedID);
+                out(displaySavedID);
             }
         });
 
         UI.compare_button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                UI.ifInvalidID_label.setVisible(false);
                 String id = UI.userDbID_text.getText();
+                // checks if id is null. If so, sets its value to 1
                 id = (id != null) ? id : "1";
+
+                // queries fingerprint data from the database
                 String fingerprint = database.select(id);
-                System.out.println(fingerprint);
-                compareToDb(fingerprint);
+
+                // asserts if the returned data is not an empty value
+                if (fingerprint.equals("")) {
+                    compareToDb(fingerprint);
+                } else {
+                    UI.ifInvalidID_label.setVisible(true);
+                }
+
+
             }
         });
     }
 
+    // is called upon every attempt to connect to a new device
     private void whenReconnect() {
         if (hSavedFIR != null) {
             hSavedFIR.dispose();
@@ -576,10 +628,8 @@ public class Device {
     private void startUI() {
         //creates a new instance of JFrame
         JFrame frame = new JFrame("Interface de Testes - Hamster DX/III");
-
-        //instantiates the DeviceUI class
-
         //attributes a content panel to the jframe
+        //UI was already instantiated//
         frame.setContentPane(UI.home_panel);
 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -587,15 +637,16 @@ public class Device {
         frame.setVisible(true);
     }
 
-    private void constructor() {
-        initialProcedures();
-        initializeButtons();
-    }
 
     public Device() {
+        // prepares UI
         startUI();
-        out(Msg.INIT);
 
-        constructor();
+        // greets user
+        out(Msg.INIT);
+        out(Msg.GREET);
+
+        //assemble program functionality
+        assemble();
     }
 }
