@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="NBioBSPJNI">
+    <CLASSES>
+      <root url="jar://D:/Arquivos Baixados/Relacionados à dispositivos/eNBioBSP_SDK_JAVA_v1.0.0.15/eNBioBSP_SDK_JAVA_v1.0.0.15/Lib/NBioBSPJNI.jar!/" />
+      <root url="jar://D:/Arquivos Baixados/Relacionados à dispositivos/eNBioBSP_SDK_JAVA_v1.0.0.15/eNBioBSP_SDK_JAVA_v1.0.0.15/Lib/swing-layout-1.0.3.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

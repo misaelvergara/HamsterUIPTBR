@@ -646,4 +646,8 @@ public class Device {
         //assemble program functionality
         assemble();
     }
+
+    public static void main(String args[]) {
+        Device start = new Device();
+    }
 }
