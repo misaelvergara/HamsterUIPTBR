@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+Class-Path: mysql-connector-java-8.0.15.jar NBioBSPJNI.jar swing-layou
+ t-1.0.3.jar
+Main-Class: com.Fingertech.Misael.HamsterDX.Device
+
