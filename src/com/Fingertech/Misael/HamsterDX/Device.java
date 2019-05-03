@@ -24,27 +24,14 @@ import java.awt.event.ActionListener;
 import javax.swing.*;
 import java.sql.*;
 
-public class Device {
 
+public class Device {
     /*.............................................................
       ..... DEFAULT DECLARATIONS ..................................
       .............................................................
      */
-    //number of messages counter
-    private static int outCounter = 0;
-    //integer which represents the currently opened device as an array index
-    private int deviceIdInt;
 
-    //instantiates the user interface class
-    private DeviceUI UI = new DeviceUI();
-
-    //logging method
-    private void out(String msg) {
-        UI.log(UI.log_textarea.getText() + "[" + outCounter++ + "] " + msg + "\n");
-        System.out.println(msg);
-    }
-
-    //default sdk declarations
+    //sdk declarations
     private NBioBSPJNI bsp = new NBioBSPJNI();
     private NBioBSPJNI.DEVICE_ENUM_INFO deviceEnumInfo;
     private NBioBSPJNI.FIR_HANDLE hSavedFIR;
@@ -53,14 +40,28 @@ public class Device {
     private NBioBSPJNI.INPUT_FIR inputFIR;
     private NBioBSPJNI.INPUT_FIR inputFIR2;
     private NBioBSPJNI.FIR_HANDLE captureHandle;
-    private NBioBSPJNI.IndexSearch indexSearch;
     private NBioBSPJNI.IndexSearch.SAMPLE_INFO sampleInfo;
-    //private NBioBSPJNI.Export objExport;
-    //private NBioBSPJNI.Export.DATA objExportDATA;
-    //private byte[] firByteTemplate;
 
+    //number of messages counter
+    private static int outCounter = 0;
+
+    //integer which represents the currently opened device as an array index
+    private int deviceIdInt;
+
+    //instantiates the user interface class
+    private static DeviceUI UI = new DeviceUI();
+
+    //logging method
+    private void out(String msg) {
+        UI.log(UI.log_textarea.getText() + "[" + outCounter++ + "] " + msg + "\n");
+        System.out.println(msg);
+    }
     //static value that allows cross-method connectivity without declaring it multiple times
     private static Connection connection;
+
+    //declares a static instance of MessageContainer
+    public static MessageContainer msg = new MessageContainer("EN_US");
+
 
 
     /*.............................................................
@@ -101,7 +102,7 @@ public class Device {
 
             try {
                 //connects to the database
-                out(Msg.DB.YES);
+                out(msg.DB_CLOSED);
                 connection = DriverManager.getConnection(url);
                 Self.dbConnected = true;
                 return true;
@@ -116,7 +117,7 @@ public class Device {
         private void leave() {
             try {
                 connection.close();
-                out(Msg.DB.CLOSED);
+                out(msg.DB_CLOSED);
             } catch (SQLException e) {
                 System.out.println("/!\\ CANNOT CLOSE DATABASE: " + e);
             }
@@ -182,7 +183,7 @@ public class Device {
                 PreparedStatement newStatement = connection.prepareStatement(query);
                 newStatement.setString(1, fir);
                 newStatement.execute();
-                out(Msg.DB.SAVED);
+                out(msg.DB_SAVED);
 
             } catch (SQLSyntaxErrorException e) {
                 System.out.println("/!\\ ITEM NOT FOUND: " + e);
@@ -218,11 +219,11 @@ public class Device {
         connectedDevices = deviceEnumInfo.DeviceCount;
 
         if (connectedDevices == 0) {
-            out(Msg.NO_DEVICES_WERE_FOUND);
+            out(msg.NO_DEVICES_WERE_FOUND);
             return false;
         }
 
-        out(Msg.DEVICES_WERE_FOUND);
+        out(msg.DEVICES_WERE_FOUND);
 
         for (int i = 0; i < connectedDevices; i++) {
 
@@ -281,7 +282,7 @@ public class Device {
         hSavedFIR = bsp.new FIR_HANDLE();
 
         if (bsp.IsErrorOccured()) {
-            out(Msg.Capture.ERROR_TRIGGERED);
+            out(msg.CAPTURE_ERROR_TRIGGERED);
             return false;
         }
 
@@ -291,7 +292,7 @@ public class Device {
          */
         try {
             bsp.Capture(0, hSavedFIR, 10000, null, null);
-            out(Msg.Capture.SUCCESS);
+            out(msg.CAPTURE_SUCCESS);
         } catch (Exception e) {
             System.out.println(e);
         }
@@ -314,7 +315,7 @@ public class Device {
 
     // . captures a new fingerprint and compares it against the previously captured fingerprint
     private void doMatch() {
-        out(Msg.Verify.INIT);
+        out(msg.VERIFY_INIT);
 
         //resets sampleInfo data
         if (sampleInfo != null) {
@@ -325,7 +326,9 @@ public class Device {
         inputFIR2 = bsp.new INPUT_FIR();
         captureHandle = bsp.new FIR_HANDLE();
         NBioBSPJNI.FIR_PAYLOAD payload = bsp.new FIR_PAYLOAD();
-        boolean matchSucceeded = false;
+
+        //it is mandatory to declare matchSucceeded as an object of boolean
+        Boolean matchSucceeded = new Boolean(false);
 
         // refers to the text encoded object
         inputFIR.SetTextFIR(textSavedFIR);
@@ -338,30 +341,12 @@ public class Device {
         }
 
         if (bsp.IsErrorOccured()) {
-            out(Msg.Verify.ERROR_NEAR_CAPTURE);
+            out(msg.VERIFY_ERROR_NEAR_CAPTURE);
             return;
         }
         // refers to the handle object
         inputFIR2.SetFIRHandle(captureHandle);
-        out(Msg.Verify.MATCHING_STARTED);
-        /*
-        indexSearch = bsp.new IndexSearch();
-        indexSearch.AddFIR(inputFIR, 0, sampleInfo);
-        indexSearch.SaveDB("C:\\Debug\\fingerprint_sample.db");
-
-        objExport = bsp.new Export();
-        objExportDATA = objExport.new DATA();
-
-        objExport.ExportFIR(inputFIR, objExportDATA, 34);
-
-        if (firByteTemplate != null) {
-            firByteTemplate = null;
-        }
-
-        firByteTemplate = objExportDATA.FingerData[0].Template[0].Data;
-
-        System.out.println(firByteTemplate);*/
-
+        out(msg.VERIFY_MATCHING_STARTED);
 
         if (bsp.IsErrorOccured()) {
             out("err");
@@ -372,9 +357,9 @@ public class Device {
         bsp.VerifyMatch(inputFIR2, inputFIR, matchSucceeded, payload);
 
         if (matchSucceeded) {
-            out(Msg.Verify.YES);
+            out(msg.VERIFY_YES);
         } else {
-            out(Msg.Verify.NO);
+            out(msg.VERIFY_NO);
         }
     }
 
@@ -410,12 +395,12 @@ public class Device {
         }
 
         if (bsp.IsErrorOccured()) {
-            out(Msg.Verify.ERROR_NEAR_CAPTURE);
+            out(msg.VERIFY_ERROR_NEAR_CAPTURE);
             return;
         }
 
         inputFIR2.SetFIRHandle(captureHandle);
-        out(Msg.Verify.MATCHING_STARTED);
+        out(msg.VERIFY_MATCHING_STARTED);
 
 
         if (bsp.IsErrorOccured()) {
@@ -424,9 +409,9 @@ public class Device {
         bsp.VerifyMatch(inputFIR2, inputFIR, matchSucceeded, payload);
 
         if (matchSucceeded) {
-            out(Msg.Verify.YES);
+            out(msg.VERIFY_YES);
         } else {
-            out(Msg.Verify.NO);
+            out(msg.VERIFY_NO);
         }
     }
 
@@ -435,7 +420,25 @@ public class Device {
         UI.device_list.addItem(deviceEnumInfo.DeviceInfo[i].Name +
                 "-" + deviceEnumInfo.DeviceInfo[i].Instance);
     }
+    
+    //sets UI text messages
+    public void setTextMessage() {
+        UI.lookUp_button.setText(msg.BUTTON_FIND);
+        UI.basicFunc_title.setText(msg.UI_BASIC_TITLE);
 
+        UI.capture_button.setText(msg.UI_CAPTURE);
+        UI.match_button.setText(msg.UI_MATCH);
+
+        UI.db_title.setText(msg.UI_DBTITLE);
+        UI.saveString_button.setText(msg.UI_DBSAVE);
+        UI.accessDB_button.setText(msg.UI_DBCONNECT);
+
+        UI.compare_label.setText(msg.UI_COMPARE_TO_REGISTER);
+        UI.ifInvalidID_label.setText(msg.UI_INVALID_ID);
+        UI.compare_button.setText(msg.UI_COMPARE);
+
+
+    }
 
     /*  checks firRecord availability in order to enable a button
      */
@@ -481,7 +484,7 @@ public class Device {
 
                 // asserts if the device look up button is checked to open a device
                 if (!Self.behaveOpenButton) {
-                    out(Msg.LOOKING_UP_DEVICES);
+                    out(msg.LOOKING_UP_DEVICES);
                     // closes device even if no devices are connected
                     closeDevice();
                     // disables capture and match buttons
@@ -494,19 +497,19 @@ public class Device {
 
                     // looks up for connected devices and returns as a boolean if any was found
                     if (doLookUpConnected()) {
-                        UI.lookUp_button.setText(Msg.Button.OPEN);
+                        UI.lookUp_button.setText(msg.BUTTON_OPEN);
                         Self.behaveOpenButton = true;
                     }
                 } else { //<= executes code if the look up button is set to open a device
-                    
+
                     // attempts to connect to a selected device and returns boolean as result
                     if (connectTo()) {
-                        out(Msg.DEVICE_OPENED);
-                        UI.lookUp_button.setText(Msg.Button.FIND);
-                        
+                        out(msg.DEVICE_OPENED);
+                        UI.lookUp_button.setText(msg.BUTTON_FIND);
+
                         //empties device list in order to prepare it for further detections
                         UI.device_list.removeAllItems();
-                        
+
                         //enables capture and match buttons
                         UI.captureAndMatchEnabled(true);
 
@@ -521,9 +524,9 @@ public class Device {
                          */
                         Self.behaveOpenButton = false;
                     } else { //<= executes if connection wasn't established
-                        out(Msg.DEVICE_OPENING_FAILED);
+                        out(msg.DEVICE_OPENING_FAILED);
 
-                        UI.lookUp_button.setText(Msg.Button.RETRY);
+                        UI.lookUp_button.setText(msg.BUTTON_RETRY);
                         UI.device_list.removeAllItems();
 
                         Self.behaveOpenButton = false;
@@ -542,7 +545,7 @@ public class Device {
                 if (database.access()) {
 
                     //enable functionality for database buttons
-                    UI.accessDB_button.setText("CONECTADO");
+                    UI.accessDB_button.setText(msg.DB_CONNECTED);
                     UI.accessDB_button.setEnabled(false);
                     UI.enableDBCompare(true);
 
@@ -556,7 +559,7 @@ public class Device {
                     //asserts connectivity to a established database
                     Self.dbConnected = true;
                 } else {//<= if connectivity fails
-                    out(Msg.DB.NO);
+                    out(msg.DB_NO);
                 }
 
             }
@@ -570,7 +573,7 @@ public class Device {
 
                 // returns the id of the stored database for further access
                 int id = database.returnID();
-                String displaySavedID = "ID PARA CADASTRO: " + id;
+                String displaySavedID = "ID : " + id;
 
 
                 UI.showSavedId_label.setVisible(true);
@@ -598,6 +601,18 @@ public class Device {
                 }
 
 
+            }
+        });
+
+        UI.lang_list.addActionListener(new ActionListener() {{}
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String selectedLang = UI.lang_list.getItemAt(UI.lang_list.getSelectedIndex()).toString();
+                System.out.println(selectedLang);
+
+                msg.changeLanguage(selectedLang);
+                msg.assertNewLanguage();
+                setTextMessage();
             }
         });
     }
@@ -632,6 +647,8 @@ public class Device {
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.pack();
         frame.setVisible(true);
+
+        setTextMessage();
     }
 
 
@@ -640,14 +657,14 @@ public class Device {
         startUI();
 
         // greets user
-        out(Msg.INIT);
-        out(Msg.GREET);
+        out(msg.INIT);
+        out(msg.GREET);
 
-        //assemble program functionality
+        //assembles program functionality
         assemble();
     }
 
     public static void main(String args[]) {
-        Device start = new Device();
+        new Device();
     }
 }

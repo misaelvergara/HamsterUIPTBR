@@ -1,7 +1,5 @@
 package com.Fingertech.Misael.HamsterDX;
-
 import javax.swing.*;
-import java.awt.event.*;
 
 public class DeviceUI {
     public JPanel home_panel;
@@ -12,16 +10,19 @@ public class DeviceUI {
     public JButton match_button;
     public JScrollPane scrollable_textinput;
     public JTextArea log_textarea;
-    private JPanel advanced_panel;
+    public JPanel advanced_panel;
     public JButton saveString_button;
     public JButton accessDB_button;
-    private JPanel separator;
-    private JPanel dbInsert_panel;
+    public JPanel separator;
+    public JPanel dbInsert_panel;
     public JButton compare_button;
     public JTextField userDbID_text;
-    private JLabel compare_label;
+    public JLabel compare_label;
     public JLabel showSavedId_label;
     public JLabel ifInvalidID_label;
+    public JLabel db_title;
+    public JLabel basicFunc_title;
+    public JComboBox lang_list;
 
     public void log(String input) {
         log_textarea.setText(input);
@@ -45,12 +46,14 @@ public class DeviceUI {
     }
 
     public DeviceUI() {
-        showSavedId_label.setVisible(false);
-        ifInvalidID_label.setVisible(false);
-        log_textarea.setLineWrap(true);
-        log_textarea.setWrapStyleWord(true);
-        captureAndMatchEnabled(false);
+        lang_list.addItem("EN_US");
+        lang_list.addItem("PT_BR");
+
         enableDBButtons(false);
         enableDBCompare(false);
+        showSavedId_label.setVisible(false);
+        ifInvalidID_label.setVisible(false);
+        captureAndMatchEnabled(false);
+
     }
 }
