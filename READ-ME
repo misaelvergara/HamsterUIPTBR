@@ -1,0 +1,17 @@
+## INTRO
+
+This project is a GUI based on Java developed to interact with fingerprint scanners. Its
+functionality consist of reading and comparing fingerprint data captured in real time or
+gathered from a database. It can also store data through a established MySQL connection.
+
+Supported device models are: 
+  #> Hamster DX
+  #> Hamster III
+
+## INSTRUCTIONS
+
+1. Open MySQL Workbench.
+2. Open and run ' RUN-ME.sql ' script.
+3. Execute ' HamsterUI_module.jar ' @(' /HamsterUI/out/artifacts/HamsterUI_module_jar/ ').
+
+Developed by @GITHUB: misaelvergara
