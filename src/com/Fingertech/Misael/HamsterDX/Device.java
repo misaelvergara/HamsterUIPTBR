@@ -48,18 +48,28 @@ public class Device {
     //integer which represents the currently opened device as an array index
     private int deviceIdInt;
 
-    //instantiates the user interface class
+    /* INSTANTIATES THE USER INTERFACE CLASS
+        @reason: to access view methods n' switch visibility between interface
+        elements
+    */
     private static DeviceUI UI = new DeviceUI();
 
-    //logging method
+    /* DECLARES LOGGING METHOD ' out() '
+        @reason: to send internal messages to the logging area in the UI
+     */
     private void out(String msg) {
         UI.log(UI.log_textarea.getText() + "[" + outCounter++ + "] " + msg + "\n");
         System.out.println(msg);
     }
-    //static value that allows cross-method connectivity without declaring it multiple times
+
+    /* DECLARES STATIC CONNECTION VARIABLE
+        @reason: to prevent establishing a connection to the database each time
+        it is required
+     */
     private static Connection connection;
 
-    //declares a static instance of MessageContainer
+    /* DECLARES A STATIC INSTANCE OF ' MessageContainer '
+    */
     public static MessageContainer msg = new MessageContainer("EN_US");
 
 
@@ -238,7 +248,7 @@ public class Device {
 
     }
 
-    //connects to a SELECTED device
+    // connects to a SELECTED device
     private boolean connectTo() {
         //number representing the list item selected
         deviceIdInt = UI.device_list.getSelectedIndex();
@@ -421,7 +431,7 @@ public class Device {
                 "-" + deviceEnumInfo.DeviceInfo[i].Instance);
     }
     
-    //sets UI text messages
+    // sets UI text messages
     public void setTextMessage() {
         UI.lookUp_button.setText(msg.BUTTON_FIND);
         UI.basicFunc_title.setText(msg.UI_BASIC_TITLE);

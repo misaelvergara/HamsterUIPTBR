@@ -55,6 +55,6 @@ public class DeviceUI {
         ifInvalidID_label.setVisible(false);
         captureAndMatchEnabled(false);
 
-    }
 
+    }
 }
