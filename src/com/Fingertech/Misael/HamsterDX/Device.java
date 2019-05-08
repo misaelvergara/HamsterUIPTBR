@@ -27,11 +27,11 @@ import java.sql.*;
 
 public class Device {
     /*.............................................................
-      ..... DEFAULT DECLARATIONS ..................................
+      ..... DECLARAÇÕES PADRÃO .............;;.....................
       .............................................................
      */
 
-    //sdk declarations
+    //DECLARAÇÕES DO SDK
     private NBioBSPJNI bsp = new NBioBSPJNI();
     private NBioBSPJNI.DEVICE_ENUM_INFO deviceEnumInfo;
     private NBioBSPJNI.FIR_HANDLE hSavedFIR;
@@ -42,44 +42,45 @@ public class Device {
     private NBioBSPJNI.FIR_HANDLE captureHandle;
     private NBioBSPJNI.IndexSearch.SAMPLE_INFO sampleInfo;
 
-    //number of messages counter
+    //VARIÁVEL QUE CONTA MENSAGENS
     private static int outCounter = 0;
 
-    //integer which represents the currently opened device as an array index
+    //INTEIRO QUE REPREESENTA O DISPOSITIVO ABERTO COMO UM ÍNDICE DE UMA ARRAY
     private int deviceIdInt;
 
-    /* INSTANTIATES THE USER INTERFACE CLASS
-        @reason: to access view methods n' switch visibility between interface
-        elements
+    /* INSTANCIA A CLASSE DE INTERFACE DO USUÁRIO
+        @motivo: acessar métodos de visualização e alterar a visibilidade dos
+        componentes da interface de usuário
     */
     private static DeviceUI UI = new DeviceUI();
 
-    /* DECLARES LOGGING METHOD ' out() '
-        @reason: to send internal messages to the logging area in the UI
+    /* DECLARA O MÉTODO DE LOG ' out() '
+        @motivo: envia mensagens internass para a área de log na interface de
+        usuário
      */
     private void out(String msg) {
         UI.log(UI.log_textarea.getText() + "[" + outCounter++ + "] " + msg + "\n");
         System.out.println(msg);
     }
 
-    /* DECLARES STATIC CONNECTION VARIABLE
-        @reason: to prevent establishing a connection to the database each time
-        it is required
+    /* DECLARA UMA VARIÁVEL ESTÁTICA PARA CONEXÃO COM O BANCO DE DADOS
+        @motivo: prevenir que uma nova variável seja declarada toda vez que a
+        conexão for requirida
      */
     private static Connection connection;
 
-    /* DECLARES A STATIC INSTANCE OF ' MessageContainer '
+    /* DECLARA UMA INSTÂNCIA ESTÁTICA DE ' MessageContainer '
     */
     public static MessageContainer msg = new MessageContainer("EN_US");
 
 
 
     /*.............................................................
-      ..... NESTED CLASSES ........................................
+      ..... CLASSES ANINHADAS .....................................
       .............................................................
      */
 
-    //program status information class
+    // CLASSE DE INFORMAÇÃO DE STATUS DO PROGRAMA
     private static class Self {
         private static boolean deviceConnected = false;
         private static boolean behaveOpenButton = false;
@@ -89,7 +90,7 @@ public class Device {
         private static String lastPromptedId = "0";
     }
 
-    //database access class
+    // CLASSE DE ACESSO AO BANCO DE DADOS
     private class Database {
         String db = "hamster";
         String user = "test";
@@ -100,10 +101,11 @@ public class Device {
                 db + "?user=" + user + "&password=" +
                 pw + "&useTimezone=true&serverTimezone=UTC";
 
-        //accesses database and returns whether the connection was successful or not
+        // ACESSA O BANCO DE DADOS E RETORNA UM VALOR LÓGICO REFERENTE (V OU F)
+        // AO SUCESSO DA CONEXÃO
         private boolean access() {
             try {
-                //verifies if the driver class is present
+                // VERIFICA SE A CLASSE DO DRIVER ESTÁ PRESENTE
                 Class.forName("com.mysql.cj.jdbc.Driver");
             } catch (ClassNotFoundException e) {
                 System.out.println(e);
@@ -111,7 +113,7 @@ public class Device {
             }
 
             try {
-                //connects to the database
+                // SE CONECTA A BANCO DE DADOS
                 out(msg.DB_CLOSED);
                 connection = DriverManager.getConnection(url);
                 Self.dbConnected = true;
@@ -123,7 +125,7 @@ public class Device {
             }
         }
 
-        //leaves connection
+        // DEIXA A CONEXÃO
         private void leave() {
             try {
                 connection.close();
@@ -133,11 +135,11 @@ public class Device {
             }
         }
 
-        //returns user fingerprint data from the database
+        // RETORNA OS DADOS BIOMÉTRICOS DE UM USUÁRIO DO BANCO DE DADOS
         private String select(String id) {
             try {
 
-                //checks if the currently prompted id is equal to the last prompted id
+                // VERIFICA SE O ID ATUAL PASSADO COMO PARÂMETRO É IGUAL AO ÚLTIMO ID SOLICITADO
                 if (Self.lastPromptedId.equals(id)) {
                     return Self.remoteFirFromDB;
 
@@ -166,8 +168,8 @@ public class Device {
             return "";
         }
 
-        /* Returns the selected database table number of rows.
-           This number represents the id of the last registered user.
+        /* RETORNA O NÚMERO DE ROWS DA TABELA SELECIONADA DO BANCO DE DADOS
+           . esse número representa o id do último usuário registrado no banco
         */
         private int returnID() {
             try {
@@ -184,8 +186,8 @@ public class Device {
             }
         }
 
-        /* Utility: stores fingerprint data in the Mysql database
-           Parameter: fingerprint database
+        /* UTILIDADE: ARMAZENA DADOS BIOMÉTRICOS NO BANCO DE DADOS
+           PARÂMETRO: DADOS BIOMÉTRICOS
          */
         private void save(String fir) {
             try {
@@ -206,20 +208,20 @@ public class Device {
     private Device.Database database = new Device.Database();
 
     /*.............................................................
-      ..... CLASS METHODS .........................................
+      ..... MÉTODOS DA CLASSE ' Device ' ..........................
       .............................................................
      */
 
-    //looks up for connected devices
+    //PROCURA DISPOSITIVOS CONECTADOS AO PC
     private boolean doLookUpConnected() {
-        //nº of connected devices
+        //Nº DE DISPOSITIVOS CONECTADOS
         int connectedDevices;
         Self.deviceConnected = false;
 
         deviceEnumInfo = bsp.new DEVICE_ENUM_INFO();
         bsp.EnumerateDevice(deviceEnumInfo);
-        //instantiates DEVICE_ENUM_INFO and passes its values onto EnumerateDevice for
-        //a quick check up
+        // INSTANCIA ' DEVICE_ENUM_INFO ' E O PASSE COMO PARÂMETRO P/ EnumerateDevice
+        // ISSO POSSIBILITA VERIFICAR O Nº DE DISPOSITIVOS CONECTADOS
 
         if (bsp.IsErrorOccured()) {
             out("[REASON] SDK Triggered Error");
@@ -241,21 +243,22 @@ public class Device {
                     deviceEnumInfo.DeviceInfo[i].Name + " - " +
                     deviceEnumInfo.DeviceInfo[i].Instance);
 
-            //adds them to the UI list of devices
+            // ADICIONA OS DISPOSITIVOS À LISTA DA INTERFACE DE USUÁRIO
             addToDeviceList(i);
         }
         return true;
 
     }
 
-    // connects to a SELECTED device
+    // CONECTA AO DISPOSITIVO SELECIONADO
     private boolean connectTo() {
-        //number representing the list item selected
+        //ENXERGA QUAL DISPOSITIVO FOI SELECIONADO NA LISTA
         deviceIdInt = UI.device_list.getSelectedIndex();
 
         if (!Self.deviceConnected) {
-            /*DeviceInfo is an array that contains the number of connected devices. Thus, its order
-             is related to the position that a device was placed in the UI list.
+            /*DeviceInfo é um array que contém o número de disp. conectados. Assim, a sua ordem
+             de índice está relacionada à posição que o dispositivo foi enquadrado na lista da
+             interface de usuário.
              */
             bsp.OpenDevice(deviceEnumInfo.DeviceInfo[deviceIdInt].NameID,
                     deviceEnumInfo.DeviceInfo[deviceIdInt].Instance);
@@ -274,11 +277,11 @@ public class Device {
         bsp.CloseDevice();
     }
 
-    /*  . captures a fingerprint
-        . refers to the collected fingerprint data to a string
+    /*  . CAPTURA UMA DIGITAL
+        . RELACIONA OS DADOS BIOMÉTRICOS DA DIGITAL À UMA STRING
      */
     private boolean doCapture() {
-        /*  Erases data of past captured fingerprints.
+        /*  APAGA OS DADOS DA ÚLTIMA IMPRESSÃO DIGITAL CAPTURADAS.
          */
         if (hSavedFIR != null) {
             hSavedFIR.dispose();
@@ -287,7 +290,7 @@ public class Device {
         hSavedFIR = null;
         Self.firRecord = null;
 
-        /*  Instantiates the handler class.
+        /*  INSTANCIA A CLASSE ' HANDLER '.
          */
         hSavedFIR = bsp.new FIR_HANDLE();
 
@@ -296,9 +299,8 @@ public class Device {
             return false;
         }
 
-        /*  Assigns the handler class as a parameter to the capture method.
-            The method returns hSavedFir as a recipient of the fingerprint data
-            promptly collected.
+        /*  Passa o objeto da classe HANDLER como parâmetro para o método de captura.
+            O método retorna ' hSavedFir ' como um condutor dos dados biométricos da impressão capturada.
          */
         try {
             bsp.Capture(0, hSavedFIR, 10000, null, null);
@@ -307,27 +309,26 @@ public class Device {
             System.out.println(e);
         }
 
-        /*  Instantiates the text encoding class.
+        /*  Instancia a classe que transforma os dados biom. em texto extenso
          */
         textSavedFIR = bsp.new FIR_TEXTENCODE();
 
-        /*  Saves the captured fingerprint and translates it into
-            a string.
+        /*  Salva os dados biométricos capturados e o traduz para formato de texto
          */
         bsp.GetTextFIRFromHandle(hSavedFIR, textSavedFIR);
 
-        //string containing the fingerprint data
+        // Variável que contém os dados biométricos em forma de texto
         Self.firRecord = textSavedFIR.TextFIR;
 
         System.out.println("Tamanho da string: " + Self.firRecord.length());
         return true;
     }
 
-    // . captures a new fingerprint and compares it against the previously captured fingerprint
+    // . captura uma nova impressão e a compara com a última impressão capturada
     private void doMatch() {
         out(msg.VERIFY_INIT);
 
-        //resets sampleInfo data
+        // reseta sampleInfo
         if (sampleInfo != null) {
             sampleInfo = null;
         }
@@ -337,13 +338,13 @@ public class Device {
         captureHandle = bsp.new FIR_HANDLE();
         NBioBSPJNI.FIR_PAYLOAD payload = bsp.new FIR_PAYLOAD();
 
-        //it is mandatory to declare matchSucceeded as an object of boolean
+        // é indispensável a declaração de matchSucceeded como ma isntância da classe ' Boolean '
         Boolean matchSucceeded = new Boolean(false);
 
-        // refers to the text encoded object
+        // inputFir é uma referência à textSavedFir
         inputFIR.SetTextFIR(textSavedFIR);
 
-        //captures a new fingerprint using captureHandle as a recipient
+        // captura uma nova digital, utiliza captureHandle como condutor
         try {
             bsp.Capture(0, captureHandle, 10000, null, null);
         } catch (Exception e) {
@@ -354,7 +355,7 @@ public class Device {
             out(msg.VERIFY_ERROR_NEAR_CAPTURE);
             return;
         }
-        // refers to the handle object
+        // inputFir2 é uma referência à digital capturada recentemente
         inputFIR2.SetFIRHandle(captureHandle);
         out(msg.VERIFY_MATCHING_STARTED);
 
@@ -363,7 +364,7 @@ public class Device {
             return;
         }
 
-        //returns the verification status through matchSucceeded
+        // retorna se as digitais são idênticas através do valor lógico de matchSucceeded
         bsp.VerifyMatch(inputFIR2, inputFIR, matchSucceeded, payload);
 
         if (matchSucceeded) {
@@ -373,8 +374,8 @@ public class Device {
         }
     }
 
-    /*  . parameter: fingerprint data from a database
-        . captures a new fingerprint and compares it against the parsed parameter
+    /*  . parâmetro: dados biométricos do banco de dados
+        . captura uma nova impressão digital e a compara ao parâmetro passado
     */
     private void compareToDb(String fingerprint) {
         if (sampleInfo != null) {
@@ -388,16 +389,15 @@ public class Device {
 
         Boolean matchSucceeded = false;
 
-        /*  Attributes the fingerprint data to a new instance of
-            FIR_TEXTENCODE. The attributed string will be read and
-            assigned to a handle which will deal with the data, rendering
-            it for comparison.
+        /*  Atribui os dados biométricos à uma nova instância de
+            FIR_TEXTENCODE. O valor atribuído será lido e relacionado à um
+            condutor (handle) que irá renderizar os dados biométricos para que
+            possam ser comparados.
          */
         dbReturnedTXTFIR = bsp.new FIR_TEXTENCODE();
         dbReturnedTXTFIR.TextFIR = fingerprint;
         inputFIR.SetTextFIR(dbReturnedTXTFIR);
 
-        //tries capture method and catches resulted exception
         try {
             bsp.Capture(captureHandle);
         } catch (Exception e) {
@@ -425,13 +425,13 @@ public class Device {
         }
     }
 
-    //adds devices to the device list
+    // adiciona dispositivos à lista de interface de usuário
     private void addToDeviceList(int i) {
         UI.device_list.addItem(deviceEnumInfo.DeviceInfo[i].Name +
                 "-" + deviceEnumInfo.DeviceInfo[i].Instance);
     }
     
-    // sets UI text messages
+    // atualiza os campos da interface de usuário
     public void setTextMessage() {
         UI.lookUp_button.setText(msg.BUTTON_FIND);
         UI.basicFunc_title.setText(msg.UI_BASIC_TITLE);
@@ -450,8 +450,7 @@ public class Device {
 
     }
 
-    /*  checks firRecord availability in order to enable a button
-     */
+    /*  verifica se uma digital foi capturada para que um botão seja ativado    */
     private boolean canSaveFirToDB() {
         if (Self.firRecord != null) {
             UI.saveString_button.setEnabled(true);
@@ -462,7 +461,7 @@ public class Device {
         }
     }
 
-    //  assembles buttons upon call
+    //  monta os botões
     private void assemble() {
         UI.match_button.addActionListener(new ActionListener() {
             @Override
@@ -474,13 +473,14 @@ public class Device {
         UI.capture_button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                //executes capture method and checks if it was successful
+                // executa o método de capturada e verifica se este foi executado com sucesso
                 if (doCapture()) {
 
-                    //enable match button
+                    // ativa o botão de comparação
                     UI.match_button.setEnabled(true);
 
-                    //enables store in database button if the client is connected to a database
+                    // se o cliente já estiver conectado ao banco de dados, ativa o botão para salvar
+                    // a impressão capturada
                     if (Self.dbConnected) {
                         UI.saveString_button.setEnabled(true);
                     }
@@ -492,35 +492,36 @@ public class Device {
             @Override
             public void actionPerformed(ActionEvent e) {
 
-                // asserts if the device look up button is checked to open a device
+                // verifica se o botão de pesquisa está checado para se comportar como um botão
+                // para iniciar dispositivos
                 if (!Self.behaveOpenButton) {
                     out(msg.LOOKING_UP_DEVICES);
-                    // closes device even if no devices are connected
+                    // fecha a conexão com os dispositivos conectados
                     closeDevice();
-                    // disables capture and match buttons
+                    // desativa os botões da interface
                     UI.captureAndMatchEnabled(false);
                     UI.enableDBCompare(false);
                     UI.enableDBButtons(false);
 
-                    // hides showSavedID label
+                    // esconde o label que mostra a id da impressão salva no banco
                     UI.showSavedId_label.setVisible(false);
 
-                    // looks up for connected devices and returns as a boolean if any was found
+                    // enxerga dispositivos conectados e retorna se algum foi detectado
                     if (doLookUpConnected()) {
                         UI.lookUp_button.setText(msg.BUTTON_OPEN);
                         Self.behaveOpenButton = true;
                     }
-                } else { //<= executes code if the look up button is set to open a device
+                } else { //<= executa o código a seguir se o botão estava checado para abrir um dispositivo
 
-                    // attempts to connect to a selected device and returns boolean as result
+                    // tenta conexão com o dispositivo selecionado e retorna seu sucesso
                     if (connectTo()) {
                         out(msg.DEVICE_OPENED);
                         UI.lookUp_button.setText(msg.BUTTON_FIND);
 
-                        //empties device list in order to prepare it for further detections
+                        // limpa a lista de disp. conectados
                         UI.device_list.removeAllItems();
 
-                        //enables capture and match buttons
+                        // habilita os botões de captura e comparação
                         UI.captureAndMatchEnabled(true);
 
                         UI.accessDB_button.setEnabled(true);
@@ -528,12 +529,11 @@ public class Device {
 
                         UI.match_button.setEnabled(false);
 
-                        /* now connection was established to the attached fingerprint scanner,
-                           the find device button is set to operate by its default purpose, which
-                           is to find attached devices
+                        /* agora que a conexão foi estabelecida com o leitor biométrico conectado ao pc,
+                           o botão ' procurar dispositivos ' irá operar normalmente
                          */
                         Self.behaveOpenButton = false;
-                    } else { //<= executes if connection wasn't established
+                    } else { //<= executa se a conexão não foi estabelecida
                         out(msg.DEVICE_OPENING_FAILED);
 
                         UI.lookUp_button.setText(msg.BUTTON_RETRY);
@@ -551,24 +551,24 @@ public class Device {
             @Override
             public void actionPerformed(ActionEvent e) {
 
-                // attempts connection to a user defined database, returns boolean
+                // tenta conexão com o banco de dados estabelecido no código
                 if (database.access()) {
 
-                    //enable functionality for database buttons
+                    // habilita a funcionalidade dos botões do banco de dados
                     UI.accessDB_button.setText(msg.DB_CONNECTED);
                     UI.accessDB_button.setEnabled(false);
                     UI.enableDBCompare(true);
 
-                    /* checks if any fingerprint was captured and enables store in database
-                        button
+                    /* verifica se alguma digital foi capturada e assim ativa o botão para
+                       salvar dados biométricos no banco
                      */
                     if (canSaveFirToDB()) {
                         System.out.println("/:-)\\ CAN SAVE TO DB");
                     }
 
-                    //asserts connectivity to a established database
+                    // evidencia que a conexão foi estabelecida
                     Self.dbConnected = true;
-                } else {//<= if connectivity fails
+                } else {//<= se a conexão falhar
                     out(msg.DB_NO);
                 }
 
@@ -578,10 +578,10 @@ public class Device {
         UI.saveString_button.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // stores fingerprint data in the database
+                // salva os dados biométricos no banco de dados
                 database.save(Self.firRecord);
 
-                // returns the id of the stored database for further access
+                // retorna o id de usuário para a impressão salva logo acima
                 int id = database.returnID();
                 String displaySavedID = "ID : " + id;
 
@@ -597,13 +597,13 @@ public class Device {
             public void actionPerformed(ActionEvent e) {
                 UI.ifInvalidID_label.setVisible(false);
                 String id = UI.userDbID_text.getText();
-                // checks if id is null. If so, sets its value to 1
+                // verifica se o id é vazio, se não, determina-o como 1
                 id = (id != null) ? id : "1";
 
-                // queries fingerprint data from the database
+                // pede os dados ao banco de dados
                 String fingerprint = database.select(id);
 
-                // asserts if the returned data is not an empty value
+                // verifica se o id selecionado não retorna um campo vazio
                 if (!fingerprint.equals("")) {
                     compareToDb(fingerprint);
                 } else {
@@ -627,7 +627,7 @@ public class Device {
         });
     }
 
-    // is called upon every attempt to connect to a new device
+    // é chamado toda vez que ocorrer uma tentativa de conexão à um novo leitor biométrico
     private void whenReconnect() {
         if (hSavedFIR != null) {
             hSavedFIR.dispose();
@@ -643,15 +643,14 @@ public class Device {
     }
 
     /*.............................................................
-      ..... CLASS CONSTRUCTOR .....................................
+      ..... CONSTRUTOR DA CLASSE ..................................
       .............................................................
      */
 
     private void startUI() {
-        //creates a new instance of JFrame
+        // cria uma instância da classe Jframe
         JFrame frame = new JFrame("Interface de Testes - Hamster DX/III");
-        //attributes a content panel to the jframe
-        //UI was already instantiated//
+        // atribui um painbel de conteúdos ao objeto de Jframe
         frame.setContentPane(UI.home_panel);
 
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -663,14 +662,14 @@ public class Device {
 
 
     public Device() {
-        // prepares UI
+        // prepara a interface de usuário
         startUI();
 
-        // greets user
+        // cumprimenta o usuário
         out(msg.INIT);
         out(msg.GREET);
 
-        //assembles program functionality
+        // monta os botões da interface de usuário
         assemble();
     }
 
