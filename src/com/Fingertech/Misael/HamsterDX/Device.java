@@ -29,7 +29,7 @@ import java.sql.*;
 
 public class Device {
     /*.............................................................
-      ..... DECLARAÇÕES PADRÃO .............;;.....................
+      ..... DECLARAÇÕES PADRÃO ....................................
       .............................................................
      */
 
@@ -115,7 +115,7 @@ public class Device {
             }
 
             try {
-                // SE CONECTA A BANCO DE DADOS
+                // SE CONECTA AO BANCO DE DADOS
                 out(msg.DB_CLOSED);
                 connection = DriverManager.getConnection(url);
                 Self.dbConnected = true;
@@ -222,7 +222,7 @@ public class Device {
 
         deviceEnumInfo = bsp.new DEVICE_ENUM_INFO();
         bsp.EnumerateDevice(deviceEnumInfo);
-        // INSTANCIA ' DEVICE_ENUM_INFO ' E O PASSE COMO PARÂMETRO P/ EnumerateDevice
+        // INSTANCIA ' DEVICE_ENUM_INFO ' E O PASSA COMO PARÂMETRO P/ ' EnumerateDevice '
         // ISSO POSSIBILITA VERIFICAR O Nº DE DISPOSITIVOS CONECTADOS
 
         if (bsp.IsErrorOccured()) {
@@ -254,7 +254,7 @@ public class Device {
 
     // CONECTA AO DISPOSITIVO SELECIONADO
     private boolean connectTo() {
-        //ENXERGA QUAL DISPOSITIVO FOI SELECIONADO NA LISTA
+        // ENXERGA QUAL DISPOSITIVO FOI SELECIONADO NA LISTA
         deviceIdInt = UI.device_list.getSelectedIndex();
 
         if (!Self.deviceConnected) {
@@ -283,7 +283,7 @@ public class Device {
         . RELACIONA OS DADOS BIOMÉTRICOS DA DIGITAL À UMA STRING
      */
     private boolean doCapture() {
-        /*  APAGA OS DADOS DA ÚLTIMA IMPRESSÃO DIGITAL CAPTURADAS.
+        /*  APAGA OS DADOS DA ÚLTIMA IMPRESSÃO DIGITAL CAPTURADA.
          */
         if (hSavedFIR != null) {
             hSavedFIR.dispose();
@@ -301,7 +301,7 @@ public class Device {
             return false;
         }
 
-        /*  Passa o objeto da classe HANDLER como parâmetro para o método de captura.
+        /*  PASSA O OBJETO DA CLASSE HANDLER COMO PARÂMETRO PARA O MÉTODO DE CAPTURA.
             O método retorna ' hSavedFir ' como um condutor dos dados biométricos da impressão capturada.
          */
         try {
@@ -311,22 +311,22 @@ public class Device {
             System.out.println(e);
         }
 
-        /*  Instancia a classe que transforma os dados biom. em texto extenso
+        /*  INSTANCIA A CLASSE QUE TRANSFORMA OS DADOS BIOM. EM TEXTO EXTENSO
          */
         textSavedFIR = bsp.new FIR_TEXTENCODE();
 
-        /*  Salva os dados biométricos capturados e o traduz para formato de texto
+        /*  SALVA OS DADOS BIOMÉTRICOS CAPTURADOS E OS TRADUZ PARA O FORMATO DE TEXTO
          */
         bsp.GetTextFIRFromHandle(hSavedFIR, textSavedFIR);
 
-        // Variável que contém os dados biométricos em forma de texto
+        // CONTÉM OS DADOS BIOMÉTRICOS EM FORMATO DE TEXTO
         Self.firRecord = textSavedFIR.TextFIR;
 
         System.out.println("Tamanho da string: " + Self.firRecord.length());
         return true;
     }
 
-    // . captura uma nova impressão e a compara com a última impressão capturada
+    // . CAPTURA UMA NOVA IMPRESSÃO E A COMPARA COM A ÚLTIMA IMPRESSÃO CAPTURADA
     private void doMatch() {
         out(msg.VERIFY_INIT);
 
@@ -376,7 +376,7 @@ public class Device {
         }
     }
 
-    /*  . parâmetro: dados biométricos do banco de dados
+    /*  @Parâmetro: dados biométricos do banco de dados
         . captura uma nova impressão digital e a compara ao parâmetro passado
     */
     private void compareToDb(String fingerprint) {
